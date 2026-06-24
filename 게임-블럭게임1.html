@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>컬러 블록 체인</title>
+<style>
+body{font-family:sans-serif;text-align:center;background:#222;color:white}
+#board{display:grid;grid-template-columns:repeat(8,42px);gap:2px;justify-content:center;margin:20px auto}
+.cell{width:42px;height:42px;border-radius:6px;cursor:pointer}
+button{padding:10px;margin:5px}
+</style>
+</head>
+<body>
+<h2>🎮 컬러 블록 체인</h2>
+<p>같은 색으로 연결된 블록을 클릭해 제거하세요. 3개 이상 제거 가능!</p>
+<div>점수: <span id="score">0</span></div>
+<button onclick="newGame()">새 게임</button>
+<div id="board"></div>
+
+<script>
+const colors=["#ff5252","#42a5f5","#66bb6a","#ffca28","#ab47bc"];
+let board=[];
+let score=0;
+
+function newGame(){
+ score=0;
+ document.getElementById("score").textContent=score;
+ board=[];
+ for(let y=0;y<10;y++){
+   let row=[];
+   for(let x=0;x<8;x++){
+      row.push(colors[Math.floor(Math.random()*colors.length)]);
+   }
+   board.push(row);
+ }
+ draw();
+}
+
+function draw(){
+ const b=document.getElementById("board");
+ b.innerHTML="";
+ for(let y=0;y<10;y++){
+   for(let x=0;x<8;x++){
+      const d=document.createElement("div");
+      d.className="cell";
+      d.style.background=board[y][x]||"#333";
+      d.onclick=()=>removeGroup(x,y);
+      b.appendChild(d);
+   }
+ }
+}
+
+function removeGroup(x,y){
+ const color=board[y][x];
+ if(!color) return;
+
+ let stack=[[x,y]], seen=new Set(), group=[];
+
+ while(stack.length){
+   const [cx,cy]=stack.pop();
+   const key=cx+","+cy;
+   if(seen.has(key)) continue;
+   seen.add(key);
+
+   if(cx<0||cy<0||cx>=8||cy>=10) continue;
+   if(board[cy][cx]!==color) continue;
+
+   group.push([cx,cy]);
+
+   stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+ }
+
+ if(group.length<3) return;
+
+ group.forEach(([gx,gy])=>board[gy][gx]=null);
+
+ score += group.length*10;
+ document.getElementById("score").textContent=score;
+
+ collapse();
+ draw();
+
+ if(score>=1000){
+   alert("승리! 점수 1000 달성!");
+ }
+}
+
+function collapse(){
+ for(let x=0;x<8;x++){
+   let col=[];
+   for(let y=9;y>=0;y--){
+      if(board[y][x]) col.push(board[y][x]);
+   }
+   for(let y=9;y>=0;y--){
+      board[y][x]=col[9-y]||null;
+   }
+ }
+}
+newGame();
+</script>
+</body>
+</html>
